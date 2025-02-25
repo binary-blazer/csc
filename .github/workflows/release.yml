@@ -30,4 +30,12 @@ jobs:
         uses: actions/upload-artifact@v4.6.1
         with:
           name: csc-${{ matrix.os == 'windows-latest' && 'exe' || matrix.os == 'macos-latest' && 'mac' || 'linux' }}
-          path: build/csc
+          path: ${{ matrix.os == 'windows-latest' && 'build/csc.exe' || 'build/csc' }}
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ matrix.os == 'windows-latest' && 'build/csc.exe' || 'build/csc' }}
+          asset_name: csc-${{ matrix.os == 'windows-latest' && 'exe' || matrix.os == 'macos-latest' && 'mac' || 'linux' }}
+          asset_content_type: application/octet-stream
