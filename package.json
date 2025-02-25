@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "bin": {
-    "csc": "dist/index.js"
+    "csc": "./dist/index.js"
   },
   "scripts": {
     "build": "tsc",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -14,6 +16,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.13.5",
+    "prettier": "^3.5.2",
     "typescript": "^5.7.3"
   },
   "dependencies": {

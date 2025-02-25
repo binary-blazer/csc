@@ -1,0 +1,8 @@
+dist
+node_modules
+.gitignore
+.prettierignore
+.prettierrc
+bun.lockb
+LICENSE
+README.md
