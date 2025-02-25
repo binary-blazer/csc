@@ -1,7 +1,7 @@
 {
   "name": "csc",
   "version": "1.0.0",
-  "description": "",
+  "description": "Clean CapCut Metadata from MP4 exported videos",
   "bin": {
     "csc": "./dist/index.js"
   },
@@ -12,9 +12,18 @@
     "format:check": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "capcut",
+    "metadata",
+    "cleaner",
+    "mp4"
+  ],
+  "author": {
+    "email": "me@binaryblazer.me",
+    "name": "Jonas F. Franke <@binary-blazer>",
+    "url": "https://binaryblazer.me"
+  },
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/cli-progress": "^3.11.6",
     "@types/node": "^22.13.5",
