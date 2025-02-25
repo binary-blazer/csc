@@ -23,8 +23,9 @@ async function removeMetadata(input: string, output: string) {
       bar.update(progress.transferred);
     });
 
-    ffmpeg(input)
-      .input(str)
+    const readStream = fs.createReadStream(input).pipe(str);
+
+    ffmpeg(readStream)
       .outputOptions("-map_metadata", "-1")
       .save(output)
       .on("end", () => {
@@ -40,8 +41,6 @@ async function removeMetadata(input: string, output: string) {
         console.error(`Error processing file: ${err.message}`);
         reject(err);
       });
-
-    fs.createReadStream(input).pipe(str);
   });
 }
 
