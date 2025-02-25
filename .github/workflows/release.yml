@@ -27,7 +27,7 @@ jobs:
         run: bun run release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v4.6.1
         with:
           name: csc-${{ matrix.os == 'windows-latest' && 'exe' || matrix.os == 'macos-latest' && 'mac' || 'linux' }}
           path: build/csc
