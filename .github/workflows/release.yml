@@ -13,10 +13,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2.0.1
         with:
           bun-version: latest
 
@@ -27,7 +27,7 @@ jobs:
         run: bun run release
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.0.0
         with:
           name: csc-${{ matrix.os == 'windows-latest' && 'exe' || matrix.os == 'macos-latest' && 'mac' || 'linux' }}
           path: build/csc
