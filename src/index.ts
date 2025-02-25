@@ -6,11 +6,14 @@ import fs from "node:fs";
 import cliProgress from "cli-progress";
 import { exiftool } from "exiftool-vendored";
 import inquirer from "inquirer";
-import { promisify } from "util";
-import { pipeline } from "stream";
 
 const program = new Command();
-const pipelineAsync = promisify(pipeline);
+
+const cliColors = {
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  reset: "\x1b[0m",
+};
 
 async function removeMetadata(input: string, output: string, overwrite: boolean) {
   return new Promise<void>(async (resolve, reject) => {
@@ -19,6 +22,8 @@ async function removeMetadata(input: string, output: string, overwrite: boolean)
       length: stat.size,
       time: 100 /* ms */
     });
+
+    console.clear();
 
     const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     bar.start(stat.size, 0);
@@ -32,12 +37,14 @@ async function removeMetadata(input: string, output: string, overwrite: boolean)
 
     readStream.on('end', async () => {
       try {
-        const exiftoolArgs = overwrite ? ['-all=', '-overwrite_original'] : ['-all='];
+        const exiftoolArgs = overwrite ? ['-all=', '-overwrite_original_in_place'] : ['-all='];
         await exiftool.write(output, {}, exiftoolArgs);
         bar.update(stat.size);
         bar.stop();
+        console.clear();
+        const message = `Metadata removed successfully. Output saved to ${path.basename(output)}`;
         console.log(
-          `Metadata removed successfully. Output saved to ${path.basename(output)}`,
+          `${cliColors.green}${message}${cliColors.reset}`
         );
         resolve();
         process.exit(0);
@@ -50,6 +57,18 @@ async function removeMetadata(input: string, output: string, overwrite: boolean)
         }
         reject(err);
       }
+    });
+
+    readStream.on('error', (err) => {
+      bar.stop();
+      console.error(`Error reading file: ${err.message}`);
+      reject(err);
+    });
+
+    writeStream.on('error', (err) => {
+      bar.stop();
+      console.error(`Error writing file: ${err.message}`);
+      reject(err);
     });
 
     readStream.pipe(writeStream);
@@ -69,9 +88,8 @@ async function promptOverwrite(input: string) {
   if (answers.overwrite) {
     await removeMetadata(input, input, true);
   } else {
-    const output = `${path.basename(input, path.extname(input))}_copy${path.extname(input)}`;
-    await pipelineAsync(fs.createReadStream(input), fs.createWriteStream(output));
-    await removeMetadata(output, output, true);
+    const output = path.join(path.dirname(input), `clean-${path.basename(input)}`);
+    await removeMetadata(input, output, false);
   }
 }
 
