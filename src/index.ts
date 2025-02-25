@@ -1,52 +1,48 @@
 #!/usr/bin/env node
-import fs from "node:fs";
 import path from "node:path";
-// @ts-expect-error: No types available
-import MP4Box from "mp4box";
 import { Command } from "commander";
+import ffmpeg from "fluent-ffmpeg";
+import progress from "progress-stream";
+import fs from "node:fs";
+import cliProgress from "cli-progress";
 
 const program = new Command();
 
 async function removeMetadata(input: string, output: string) {
-  try {
-    const inputFile = fs.readFileSync(input);
-    const buffer = inputFile.buffer.slice(
-      inputFile.byteOffset,
-      inputFile.byteOffset + inputFile.byteLength,
-    );
-    const mp4boxfile = MP4Box.createFile();
+  return new Promise<void>((resolve, reject) => {
+    const stat = fs.statSync(input);
+    const str = progress({
+      length: stat.size,
+      time: 100 /* ms */
+    });
 
-    mp4boxfile.onError = (e: Error) => {
-      console.error(`Error reading MP4: ${e.message}`);
-      throw e;
-    };
+    const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    bar.start(stat.size, 0);
 
-    const arrayBuffer = new ArrayBuffer(buffer.byteLength);
-    const uint8Array = new Uint8Array(arrayBuffer);
-    uint8Array.set(new Uint8Array(buffer));
+    str.on('progress', (progress) => {
+      bar.update(progress.transferred);
+    });
 
-    mp4boxfile.appendBuffer(arrayBuffer);
-    mp4boxfile.flush();
+    ffmpeg(input)
+      .input(str)
+      .outputOptions("-map_metadata", "-1")
+      .save(output)
+      .on("end", () => {
+        bar.update(stat.size);
+        bar.stop();
+        console.log(
+          `Metadata removed successfully. Output saved to ${path.basename(output)}`,
+        );
+        resolve();
+      })
+      .on("error", (err: Error) => {
+        bar.stop();
+        console.error(`Error processing file: ${err.message}`);
+        reject(err);
+      });
 
-    const cleanBoxes = mp4boxfile.boxes.filter(
-      (box: any) => !["udta", "meta"].includes(box.type),
-    );
-    mp4boxfile.boxes = cleanBoxes;
-
-    const outputArrayBuffer = mp4boxfile.write();
-    fs.writeFileSync(output, Buffer.from(outputArrayBuffer));
-
-    console.log(
-      `Metadata removed successfully. Output saved to ${path.basename(output)}`,
-    );
-  } catch (err) {
-    if (err instanceof Error) {
-      console.error(`Error processing file: ${err.message}`);
-    } else {
-      console.error("Error processing file:", err);
-    }
-    throw err;
-  }
+    fs.createReadStream(input).pipe(str);
+  });
 }
 
 program
